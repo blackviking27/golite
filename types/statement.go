@@ -1,6 +1,6 @@
 package types
 
 type Statement struct {
-	Type  string
-	Value string
+	Type string
+	Row  Row
 }

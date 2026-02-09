@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
 
+	"github.com/blackviking27/golite/operations"
 	"github.com/blackviking27/golite/types"
 )
 
@@ -22,36 +24,46 @@ func execute_meta_command(command string) string {
 }
 
 func prepareStatement(command string, statement *types.Statement) string {
-	commandType := strings.Fields(command)[0]
+	commandParts := strings.Fields(command)
 	status := types.PREPARE_FAILURE
 
-	switch strings.ToUpper(commandType) {
+	switch strings.ToUpper(commandParts[0]) {
 	case types.STATEMENT_INSERT:
-		statement.Type = types.STATEMENT_INSERT
-		statement.Value = command
+		(*statement).Type = types.STATEMENT_INSERT
+		id, err := strconv.Atoi(commandParts[1])
+		if err != nil {
+			return status
+		}
+		(*statement).Row = types.Row{
+			ID:       uint32(id),
+			Username: commandParts[2],
+			Email:    commandParts[3],
+		}
 		status = types.PREPARE_SUCCESS
 	case types.STATEMENT_SELECT:
 		statement.Type = types.STATEMENT_SELECT
-		statement.Value = command
+		statement.Row = types.Row{}
 		status = types.PREPARE_SUCCESS
 	}
-	fmt.Println(commandType)
+	fmt.Println(commandParts[0])
 	return status
 }
 
-func execute_statement(statement *types.Statement) {
+func execute_statement(statement *types.Statement, table *types.Table) {
 	switch statement.Type {
 	case types.STATEMENT_SELECT:
-		fmt.Println("Select statement executed")
+		operations.Execute_select(statement, table)
 	case types.STATEMENT_INSERT:
-		fmt.Println("Insert statement will executed")
+		operations.Execute_insert(statement, table)
 	}
 }
 
 func main() {
 	// Main REPL
 	for {
-		fmt.Println("Go Lite")
+		fmt.Println("Welcome to Go Lite DB")
+		// Creating the in-memory table
+		table := operations.NewTable() // Pointer to a table
 
 		for {
 			fmt.Println("golite>>")
@@ -89,7 +101,7 @@ func main() {
 				continue
 			}
 
-			execute_statement(&statement)
+			execute_statement(&statement, table)
 			fmt.Println("Executed")
 
 		}

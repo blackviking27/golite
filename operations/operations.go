@@ -2,16 +2,10 @@ package operations
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	"github.com/blackviking27/golite/types"
 )
-
-// Create a new table in memory
-func NewTable() *types.Table {
-	return &types.Table{
-		NumOfRows: 0,
-	}
-}
 
 func trimNull(b []byte) []byte {
 	for i, v := range b {
@@ -22,8 +16,22 @@ func trimNull(b []byte) []byte {
 	return b
 }
 
+// Create a new table in memory
+func NewTable() *types.Table {
+	return &types.Table{
+		NumOfRows: 0,
+		Pages:     [types.TableMaxPages][]byte{},
+	}
+}
+
+func FreeTable(table *types.Table) {
+	for i := range table.Pages {
+		table.Pages[i] = []byte{}
+	}
+}
+
 // SerializeRow writes a Row struct into the raw byte memory
-func SerializeRow(source types.Row, destination []byte) {
+func SerializeRow(source *types.Row, destination []byte) {
 
 	// Using the binary.little endian since different CPU interpret interger differently
 	// We are specifically mentioning the CPU to use the little endian format
@@ -42,4 +50,29 @@ func DeserializeRow(source []byte, destination *types.Row) {
 
 	emailBytes := source[types.EmailOffSet : types.EmailOffSet+types.EmailSize]
 	destination.Username = string(trimNull(emailBytes))
+}
+
+func Execute_insert(statement *types.Statement, table *types.Table) string {
+	// Checking if table is full
+	if table.NumOfRows >= types.TableMaxRows {
+		return types.EXECUTE_TABLE_FULL
+	}
+
+	row := &(statement.Row)
+
+	SerializeRow(row, table.RowSlot(table.NumOfRows))
+	table.NumOfRows += 1
+
+	return types.EXECUTE_SUCCESS
+}
+
+func Execute_select(statment *types.Statement, table *types.Table) string {
+	var row types.Row
+
+	for i := range table.NumOfRows {
+		DeserializeRow(table.RowSlot(i), &row)
+		fmt.Println(row)
+	}
+
+	return types.EXECUTE_SUCCESS
 }

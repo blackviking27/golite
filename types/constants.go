@@ -8,6 +8,9 @@ const (
 	STATEMENT_SELECT            = "SELECT"
 	PREPARE_SUCCESS             = "PREPARE_SUCCESS"
 	PREPARE_FAILURE             = "PREPARE_FAILURE"
+	EXECUTE_TABLE_FULL          = "EXECUTE_TABLE_FULL"
+	EXECUTE_SUCCESS             = "EXECUTE_SUCCESS"
+	EXECUTE_FAILURE             = "EXECUTE_FAILURE"
 
 	// DB column size definition
 	ColumnUsernameSize = 32
