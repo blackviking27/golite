@@ -37,9 +37,10 @@ func SerializeRow(source *types.Row, destination []byte) {
 	// We are specifically mentioning the CPU to use the little endian format
 	binary.LittleEndian.PutUint32(destination[types.IDOffset:], source.ID)
 
+	// Copy the source string to the destination
+	// if the length is more than the space, the string is automatically truncated
 	copy(destination[types.UsernameOffset:types.UsernameOffset+types.UsernameSize], source.Username)
 	copy(destination[types.EmailOffSet:types.EmailOffSet+types.EmailSize], source.Email)
-
 }
 
 func DeserializeRow(source []byte, destination *types.Row) {
@@ -49,10 +50,10 @@ func DeserializeRow(source []byte, destination *types.Row) {
 	destination.Username = string(trimNull(userNameBytes))
 
 	emailBytes := source[types.EmailOffSet : types.EmailOffSet+types.EmailSize]
-	destination.Username = string(trimNull(emailBytes))
+	destination.Email = string(trimNull(emailBytes))
 }
 
-func Execute_insert(statement *types.Statement, table *types.Table) string {
+func ExecuteInsert(statement *types.Statement, table *types.Table) string {
 	// Checking if table is full
 	if table.NumOfRows >= types.TableMaxRows {
 		return types.EXECUTE_TABLE_FULL
@@ -66,7 +67,7 @@ func Execute_insert(statement *types.Statement, table *types.Table) string {
 	return types.EXECUTE_SUCCESS
 }
 
-func Execute_select(statment *types.Statement, table *types.Table) string {
+func ExecuteSelect(statment *types.Statement, table *types.Table) string {
 	var row types.Row
 
 	for i := range table.NumOfRows {

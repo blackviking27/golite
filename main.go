@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/blackviking27/golite/operations"
 	"github.com/blackviking27/golite/types"
@@ -21,41 +19,6 @@ func execute_meta_command(command string) string {
 		}
 	}
 	return types.META_COMMAND_NOT_RECOGNIZED
-}
-
-func prepareStatement(command string, statement *types.Statement) string {
-	commandParts := strings.Fields(command)
-	status := types.PREPARE_FAILURE
-
-	switch strings.ToUpper(commandParts[0]) {
-	case types.STATEMENT_INSERT:
-		(*statement).Type = types.STATEMENT_INSERT
-		id, err := strconv.Atoi(commandParts[1])
-		if err != nil {
-			return status
-		}
-		(*statement).Row = types.Row{
-			ID:       uint32(id),
-			Username: commandParts[2],
-			Email:    commandParts[3],
-		}
-		status = types.PREPARE_SUCCESS
-	case types.STATEMENT_SELECT:
-		statement.Type = types.STATEMENT_SELECT
-		statement.Row = types.Row{}
-		status = types.PREPARE_SUCCESS
-	}
-	fmt.Println(commandParts[0])
-	return status
-}
-
-func execute_statement(statement *types.Statement, table *types.Table) {
-	switch statement.Type {
-	case types.STATEMENT_SELECT:
-		operations.Execute_select(statement, table)
-	case types.STATEMENT_INSERT:
-		operations.Execute_insert(statement, table)
-	}
 }
 
 func main() {
@@ -93,7 +56,7 @@ func main() {
 
 			var statement types.Statement
 
-			switch prepareStatement(currCommand, &statement) {
+			switch operations.PrepareStatement(currCommand, &statement) {
 			case types.PREPARE_SUCCESS:
 				fmt.Println("Parsed statement")
 			case types.PREPARE_FAILURE:
@@ -101,7 +64,7 @@ func main() {
 				continue
 			}
 
-			execute_statement(&statement, table)
+			operations.ExecuteStatement(&statement, table)
 			fmt.Println("Executed")
 
 		}
