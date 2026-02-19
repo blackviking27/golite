@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -10,23 +11,33 @@ import (
 	"github.com/blackviking27/golite/types"
 )
 
-func execute_meta_command(command string) string {
+func execute_meta_command(command string, table *types.Table) string {
 	switch command {
 	case ".exit":
 		{
 			fmt.Println("Shutting down...")
+			operations.DBClose(table)
 			os.Exit(0)
 		}
 	}
 	return types.META_COMMAND_NOT_RECOGNIZED
 }
 
+func parseArguments() (filename string) {
+	filenamePtr := flag.String("file", "golite.db", "File path of the DB")
+
+	return *filenamePtr
+}
+
 func main() {
 	// Main REPL
 	for {
 		fmt.Println("Welcome to Go Lite DB")
+
+		fileName := parseArguments()
+
 		// Creating the in-memory table
-		table := operations.NewTable() // Pointer to a table
+		table := operations.DbOPen(fileName) // Pointer to a table
 
 		for {
 			fmt.Println("golite>>")
@@ -44,7 +55,7 @@ func main() {
 			// commands that start with '.' like .exit
 
 			if currCommand[0] == '.' {
-				switch execute_meta_command(currCommand) {
+				switch execute_meta_command(currCommand, table) {
 				case types.META_SUCCESS:
 					continue
 				case types.META_COMMAND_NOT_RECOGNIZED:
