@@ -165,6 +165,9 @@ func ExecuteSelect(statment *types.Statement, table *types.Table) string {
 
 	for i := range table.NumOfRows {
 		DeserializeRow(table.RowSlot(i), &row)
+		if row.ID == 0 {
+			continue
+		}
 		fmt.Println(row)
 	}
 
