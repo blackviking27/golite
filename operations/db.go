@@ -153,8 +153,9 @@ func ExecuteInsert(statement *types.Statement, table *types.Table) string {
 	}
 
 	row := &(statement.Row)
+	cursor := TableEndCursor(table)
 
-	SerializeRow(row, table.RowSlot(table.NumOfRows))
+	SerializeRow(row, CursorValue(cursor))
 	table.NumOfRows += 1
 
 	return types.EXECUTE_SUCCESS
@@ -163,13 +164,50 @@ func ExecuteInsert(statement *types.Statement, table *types.Table) string {
 func ExecuteSelect(statment *types.Statement, table *types.Table) string {
 	var row types.Row
 
-	for i := range table.NumOfRows {
-		DeserializeRow(table.RowSlot(i), &row)
-		if row.ID == 0 {
-			continue
-		}
+	cursor := TableStartCursor(table)
+
+	for !cursor.IsEndOfTable {
+		DeserializeRow(CursorValue(cursor), &row)
+		CursorAdvance(cursor)
 		fmt.Println(row)
 	}
 
 	return types.EXECUTE_SUCCESS
+}
+
+func TableStartCursor(table *types.Table) *types.Cursor {
+	return &types.Cursor{
+		Table:        table,
+		RowNumber:    0,
+		IsEndOfTable: table.NumOfRows == 0,
+	}
+}
+
+func TableEndCursor(table *types.Table) *types.Cursor {
+	return &types.Cursor{
+		Table:        table,
+		RowNumber:    int(table.NumOfRows),
+		IsEndOfTable: true,
+	}
+}
+
+func CursorAdvance(cursor *types.Cursor) {
+	cursor.RowNumber += 1
+	if cursor.RowNumber >= int(cursor.Table.NumOfRows) {
+		cursor.IsEndOfTable = true
+	}
+}
+
+func CursorValue(cursor *types.Cursor) []byte {
+	rowNum := cursor.RowNumber
+	pageNum := rowNum / types.RowsPerPage
+
+	// Fetch the page
+	page := cursor.Table.GetPage(cursor.Table.Pager, uint32(pageNum))
+
+	rowOffSet := rowNum % types.RowsPerPage
+	byteOffSet := rowOffSet * types.RowSize
+
+	return page[byteOffSet : byteOffSet+types.RowSize]
+
 }

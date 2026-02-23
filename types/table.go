@@ -60,17 +60,3 @@ func (this *Table) GetPage(pager *Pager, pageNum uint32) []byte {
 	return pager.Pages[pageNum]
 
 }
-
-// Table Methods
-func (this *Table) RowSlot(rowNum uint32) []byte {
-	pageNum := rowNum / RowsPerPage
-
-	// Fetch the page
-	page := this.GetPage(this.Pager, pageNum)
-
-	rowOffSet := rowNum % RowsPerPage
-	byteOffSet := rowOffSet * RowSize
-
-	return page[byteOffSet : byteOffSet+RowSize]
-
-}
