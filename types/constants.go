@@ -30,6 +30,43 @@ const (
 
 	PageSize      = 4096
 	TableMaxPages = 100
-	RowsPerPage   = PageSize / RowSize
-	TableMaxRows  = TableMaxPages * RowsPerPage
+
+	// NODE Type
+	NOTE_INTERNAL = "NODE_INTERNAL"
+	NODE_LEAF     = "NODE_LEAF"
+
+	// Common Node header layout
+
+	// Node type
+	NodeTypeSize   uint32 = 1
+	NodeTypeOffset uint32 = 1
+
+	// Is root flag
+	IsRootSize   uint32 = 1
+	IsRootOffset uint32 = NodeTypeOffset + NodeTypeSize
+
+	// Parent pointer
+	ParentPointerSize   uint32 = 4
+	ParentPointerOffset uint32 = IsRootOffset + IsRootSize
+
+	CommonNodeHeaderSize = NodeTypeSize + IsRootSize + ParentPointerSize
+
+	// Leaf node header layout
+	// Cell -> key value pair
+	LeafNodeNumCellsSize   uint32 = 4
+	LeafNodeNumCellsOffset uint32 = CommonNodeHeaderSize
+	LeafNodeHeaderSize     uint32 = CommonNodeHeaderSize + LeafNodeNumCellsSize
+
+	// Leaf node body layout
+	LeafNodeKeySize   uint32 = 4
+	LeafNodeKeyOffset uint32 = 0
+
+	LeafNodeValueSize   uint32 = RowSize
+	LeafNodeValueOffset uint32 = LeafNodeKeyOffset + LeafNodeKeySize
+
+	LeafNodeCellSize uint32 = LeafNodeKeySize + LeafNodeValueSize
+
+	// Space left for cells after header size is defined
+	LeafNodeSpaceForCells uint32 = PageSize - LeafNodeHeaderSize
+	LeafNodeMaxCells      uint32 = LeafNodeSpaceForCells / LeafNodeCellSize
 )

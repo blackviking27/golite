@@ -2,6 +2,7 @@ package types
 
 type Cursor struct {
 	Table        *Table
-	RowNumber    int
+	PageNum      uint32
+	CellNum      uint32
 	IsEndOfTable bool
 }
